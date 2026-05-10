@@ -1,20 +1,20 @@
 {
   "outputDirectory": "dist",
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
   "installCommand": "npm install",
+  "framework": "vite",
   "routes": [
     {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
     },
     {
-      "src": "/(.*)\\.(js|css|map|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$",
+      "src": "/(.*)\\.(js|css|map|ico|png|jpg|jpeg|svg|woff|woff2|ttf|eot)$",
       "dest": "/$1.$2"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/"
     }
   ]
 }
