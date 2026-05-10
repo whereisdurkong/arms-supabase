@@ -440,7 +440,7 @@ export default function DataAnalytic() {
                             padding: '20px'
                         }}>
                             <div style={{ marginBottom: '16px' }}>
-                                <div style={{ color: '#383838', fontSize: '15px', fontWeight: 500, marginBottom: '4px', fontWeight: '800' }}>
+                                <div style={{ color: '#383838', fontSize: '15px', fontWeight: 800, marginBottom: '4px'}}>
                                     Overall Completion Progress
                                 </div>
                             </div>
