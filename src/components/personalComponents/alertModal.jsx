@@ -1,6 +1,6 @@
 // AlertModal.jsx
 import React, { useEffect } from 'react';
-import './AlertModal.css';
+import './alertModal.css';
 
 // Symbol components
 const SuccessSymbol = () => (
