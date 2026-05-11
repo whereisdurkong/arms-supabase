@@ -2580,7 +2580,7 @@ export default function ViewSubmittedAsset() {
                             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/all-submit-asset')
+                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
@@ -2607,7 +2607,7 @@ export default function ViewSubmittedAsset() {
                             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/all-submit-asset')
+                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
@@ -2638,7 +2638,7 @@ export default function ViewSubmittedAsset() {
             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/all-submit-asset')
+                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
@@ -2911,12 +2911,12 @@ export default function ViewSubmittedAsset() {
 
                 if (actionTaken === 'yes') {
                     // Save to your backend
-                    await axios.post(`${config.baseApi}/assetsAnalysis/update-appropriate-actions`, {
-                        asset_analysis_id: asset_analysis_id,
-                        appropriate_action: actionTaken,
-                        action_notes: actionTaken === 'no' ? notes : null || '',
-                        updated_by: empInfo.user_name,
-                    });
+                    // await axios.post(`${config.baseApi}/assetsAnalysis/update-appropriate-actions`, {
+                    //     asset_analysis_id: asset_analysis_id,
+                    //     appropriate_action: actionTaken,
+                    //     action_notes: actionTaken === 'no' ? notes : null || '',
+                    //     updated_by: empInfo.user_name,
+                    // });
 
                     await supabase.from('asset_analysis_master').update({
                         level3: '1',
@@ -2924,7 +2924,7 @@ export default function ViewSubmittedAsset() {
                         action_notes: actionTaken === 'no' ? notes : null || '',
                         updated_by: empInfo.user_name,
                         updated_at: new Date()
-                    })
+                    }).eq('asset_analysis_id', asset_analysis_id)
 
                     showAlertMessage('success', 'Success', `Thank you for confirming ${actionTaken === 'yes' ? 'appropriate actions were taken' : 'actions were not taken appropriately '}.`);
                     setShowAppropriateModal(false);
