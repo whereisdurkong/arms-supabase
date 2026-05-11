@@ -343,7 +343,7 @@ export default function ViewSubmittedAsset() {
             //     updated_by: empInfo.username
             // });
 
-            await supabase.select('asset_analysis_master').update({
+            await supabase.from('asset_analysis_master').update({
                 criticality_analysis_report: selectedStatus,
                 updated_by: empInfo.username,
                 updated_at: new Date()
