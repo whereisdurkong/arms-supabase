@@ -2580,7 +2580,7 @@ export default function ViewSubmittedAsset() {
                             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
+                        window.location.replace('/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
@@ -2607,7 +2607,7 @@ export default function ViewSubmittedAsset() {
                             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
+                        window.location.replace('/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
@@ -2638,7 +2638,7 @@ export default function ViewSubmittedAsset() {
             action_notes: ''
                         }).eq('asset_analysis_id', asset_analysis_id)
 
-                        window.location.replace('/AssetReliabilityMonitoringSystem/all-submit-asset')
+                        window.location.replace('/all-submit-asset')
                     } catch (err) {
                         console.log('Error checking for resampling schedule: ', err);
                     }
