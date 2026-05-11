@@ -16,7 +16,7 @@ const menuItems = {
           children: [
             {
               id: 'data',
-              title: 'Data Analytic',
+              title: 'Dashboard Analytics',
               type: 'item',
               url: '/dashboard'
             },
@@ -125,57 +125,74 @@ const menuItems = {
       ]
     },
     {
-      id: 'ui-element',
-      title: 'ELEMENTS',
-      subtitle: 'UI Components',
+      id: 'logout-section',
+      title: '',  // Empty title or use divider
       type: 'group',
-      icon: 'icon-ui',
+      className: 'logout-group', // Add custom class for styling
       children: [
         {
-          id: 'typography',
-          title: 'Typography',
+          id: 'logout',
+          title: 'Log Out',
           type: 'item',
           icon: 'material-icons-two-tone',
-          iconname: 'text_fields',
-          url: '/typography'
-        },
-        {
-          id: 'color',
-          title: 'Color',
-          type: 'item',
-          icon: 'material-icons-two-tone',
-          iconname: 'color_lens',
-          url: '/color'
-        },
-        {
-          id: 'icons',
-          title: 'Icons',
-          type: 'collapse',
-          icon: 'material-icons-two-tone',
-          iconname: 'history_edu',
-          children: [
-            {
-              id: 'feather',
-              title: 'Feather',
-              type: 'item',
-              url: '/icons/Feather'
-            },
-            {
-              id: 'font-awesome-5',
-              title: 'Font Awesome',
-              type: 'item',
-              url: '/icons/font-awesome-5'
-            },
-            {
-              id: 'material',
-              title: 'Material',
-              type: 'item',
-              url: '/icons/material'
-            }
-          ]
+          iconname: 'login', // Changed from 'login' to 'logout'
+          url: '/logout', // Update to your logout route
+
         }
       ]
-    }
+    },
+    // {
+    //   id: 'ui-element',
+    //   title: 'ELEMENTS',
+    //   subtitle: 'UI Components',
+    //   type: 'group',
+    //   icon: 'icon-ui',
+    //   children: [
+    //     {
+    //       id: 'typography',
+    //       title: 'Typography',
+    //       type: 'item',
+    //       icon: 'material-icons-two-tone',
+    //       iconname: 'text_fields',
+    //       url: '/typography'
+    //     },
+    //     {
+    //       id: 'color',
+    //       title: 'Color',
+    //       type: 'item',
+    //       icon: 'material-icons-two-tone',
+    //       iconname: 'color_lens',
+    //       url: '/color'
+    //     },
+    //     {
+    //       id: 'icons',
+    //       title: 'Icons',
+    //       type: 'collapse',
+    //       icon: 'material-icons-two-tone',
+    //       iconname: 'history_edu',
+    //       children: [
+    //         {
+    //           id: 'feather',
+    //           title: 'Feather',
+    //           type: 'item',
+    //           url: '/icons/Feather'
+    //         },
+    //         {
+    //           id: 'font-awesome-5',
+    //           title: 'Font Awesome',
+    //           type: 'item',
+    //           url: '/icons/font-awesome-5'
+    //         },
+    //         {
+    //           id: 'material',
+    //           title: 'Material',
+    //           type: 'item',
+    //           url: '/icons/material'
+    //         }
+    //       ]
+    //     }
+    //   ]
+    // }
   ]
 };
 
