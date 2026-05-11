@@ -2900,7 +2900,7 @@ export default function ViewSubmittedAsset() {
                         action_notes: notes,
                         updated_by: empInfo.user_name,
                         updated_at: new Date()
-                    }).eq('asset_analysis',asset_analysis_id);
+                    }).eq('asset_analysis_id',asset_analysis_id);
 
 
                     showAlertMessage('success', 'Success', `Thank you for confirming ${actionTaken === 'yes' ? 'appropriate actions were taken' : 'actions were not taken appropriately '}.`);
