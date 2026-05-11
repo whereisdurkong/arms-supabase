@@ -2625,10 +2625,10 @@ export default function ViewSubmittedAsset() {
                     try {
                         const empInfo = JSON.parse(localStorage.getItem("user"));
 
-                        await axios.post(`${config.baseApi}/assetsAnalysis/update-level-two-user`, {
-                            asset_analysis_id: asset_analysis_id,
-                            updated_by: empInfo.user_name,
-                        });
+                        // await axios.post(`${config.baseApi}/assetsAnalysis/update-level-two-user`, {
+                        //     asset_analysis_id: asset_analysis_id,
+                        //     updated_by: empInfo.user_name,
+                        // });
 
                         await supabase.from('asset_analysis_master').update({
                             level2: '1',
