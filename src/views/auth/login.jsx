@@ -88,7 +88,7 @@ const Auth = async (e) => {
         
         // Redirect after short delay to show success message
         setTimeout(() => {
-          window.location.replace(`/dashboard`);
+          window.location.replace(`AssetReliabilityMonitoringSystem/dashboard`);
         }, 1000);
       } else {
         // No user found with these credentials

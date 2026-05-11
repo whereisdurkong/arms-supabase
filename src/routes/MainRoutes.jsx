@@ -35,7 +35,10 @@ const TrivectorSetup = lazy(() => import('../views/setup/setup_option_trivector'
 const AllUsers = lazy(() => import('../views/auth/allusers'))
 const ViewUser = lazy(() => import('../views/auth/view-user'))
 
+const Logout = lazy(() => import('../views/auth/logout'))
+
 import ViewSubmittedAsset from '../views/oil-analysis/view-submitted-asset';
+
 
 const DataAnalytic = lazy(() => import('../views/dashboard/dashboard'))
 const Test = lazy(() => import('../views/oil-analysis/test'))
@@ -163,6 +166,11 @@ const MainRoutes = {
     {
       path: '/test',
       element: <Test />
+    },
+
+    {
+      path: '/logout',
+      element: <Logout />
     },
 
 

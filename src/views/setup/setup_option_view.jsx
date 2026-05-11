@@ -341,7 +341,7 @@
 //             showAlertMessage('success', 'Deleted Successfully', 'The asset options have been deleted successfully.');
 
 //             setTimeout(() => {
-//                 window.location.replace('//all-option-setup');
+//                 window.location.replace('/AssetReliabilityMonitoringSystem/all-option-setup');
 //             }, 2000);
 
 //         } catch (err) {
@@ -1238,7 +1238,7 @@ export default function SetupOptionView() {
             showAlertMessage('success', 'Deleted Successfully', 'The asset options have been deleted successfully.');
 
             setTimeout(() => {
-                window.location.replace('/all-option-setup');
+                window.location.replace('/AssetReliabilityMonitoringSystem/all-option-setup');
             }, 2000);
         } catch (err) {
             showAlertMessage('error', 'Failed to Delete', 'There was an error deleting the asset options.');
