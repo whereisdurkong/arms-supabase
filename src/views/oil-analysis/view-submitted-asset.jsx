@@ -205,13 +205,25 @@ export default function ViewSubmittedAsset() {
                     setActionDocumentation(true);
                 }
 
-                // Parse documentation files
-                if (data.documentation) {
-                    const files = data.documentation.split(',').filter(f => f.trim());
-                    setDocumentationFiles(files);
-                } else {
-                    setDocumentationFiles([]);
-                }
+                // In your main component, update this section:
+if (data.documentation) {
+    try {
+        // Check if documentation is a string that needs parsing
+        let parsedDocs = data.documentation;
+        if (typeof data.documentation === 'string') {
+            parsedDocs = JSON.parse(data.documentation);
+        }
+        // Handle both array and string cases
+        const files = Array.isArray(parsedDocs) ? parsedDocs : [parsedDocs];
+        setDocumentationFiles(files.filter(f => f && f.trim()));
+    } catch (e) {
+        // If parsing fails, treat as comma-separated string
+        const files = data.documentation.split(',').filter(f => f.trim());
+        setDocumentationFiles(files);
+    }
+} else {
+    setDocumentationFiles([]);
+}
 
                 // const componentRes = await axios.get(`${config.baseApi}/assets/get-asset-component-by-id`, {
                 //     params: { id: data.asset_component_id }
@@ -344,7 +356,7 @@ export default function ViewSubmittedAsset() {
             // });
 
             await supabase.from('asset_analysis_master').update({
-                criticality_analysis_report: selectedStatus,
+                criticality_analysis_status: selectedStatus,
                 updated_by: empInfo.username,
                 updated_at: new Date()
             }).eq('asset_analysis_id', asset_analysis_id)
@@ -1222,67 +1234,202 @@ export default function ViewSubmittedAsset() {
             return selectedArray.includes(actionValue);
         }, [severeSelectedAction]);
 
+//         const file = new Blob();
 
-        const handleSevereSave = useCallback(async () => {
-            if (!severeSelectedAction || severeSelectedAction === '') {
-                showAlertMessage('error', 'Empty Field', 'Please select at least one action before saving.');
-                return;
-            }
+//         const handleSevereSave = useCallback(async () => {
+//             if (!severeSelectedAction || severeSelectedAction === '') {
+//                 showAlertMessage('error', 'Empty Field', 'Please select at least one action before saving.');
+//                 return;
+//             }
 
-            const empInfo = JSON.parse(localStorage.getItem("user"));
-            setIsSevereSaving(true);
+//             const empInfo = JSON.parse(localStorage.getItem("user"));
+//             setIsSevereSaving(true);
 
-            try {
-                // Create FormData to send files
-                const formData = new FormData();
-                formData.append('asset_analysis_id', asset_analysis_id);
-                formData.append('severe_action', severeSelectedAction);
-                formData.append('updated_by', empInfo.user_name);
+//             try {
+//                 // Create FormData to send files
+//                 const formData = new FormData();
+//                 formData.append('asset_analysis_id', asset_analysis_id);
+//                 formData.append('severe_action', severeSelectedAction);
+//                 formData.append('updated_by', empInfo.user_name);
 
-                // Append all files
-               
-                uploadedFiles.forEach((file, index) => {
-                    formData.append('documentation', file.file);
+//                 // Append all files
+//                let fileMain = [];
+//                 uploadedFiles.forEach((file, index) => {
+//                     formData.append('documentation', file.file);
+//                     fileMain.push(file.file)
              
+//                 });
+
+//                 let fileNames = [];
+//                     uploadedFiles.forEach((file, index) => {
+//                     fileNames.push(file.file.name); // Store just the file name
+//                     });
+
+//                 // // Send as multipart/form-data
+//                 // await axios.post(`${config.baseApi}/assetsAnalysis/update-severe-action`, formData, {
+//                 //     headers: {
+//                 //         'Content-Type': 'multipart/form-data'
+//                 //     }
+//                 // });
+// console.log({
+//      severe_action: severeSelectedAction,
+//                     documentation: JSON.stringify(fileNames),
+//                     updated_by: empInfo.user_name,
+//                     updated_at: new Date()
+// })
+//                 await supabase.from('asset_analysis_master').update({
+//                     action_taken: severeSelectedAction,
+//                     documentation: JSON.stringify(fileNames),
+//                     updated_by: empInfo.user_name,
+//                     updated_at: new Date()
+//                 }).eq('asset_analysis_id', asset_analysis_id)
+
+//                 await supabase.storage.from('documentation').upload('file_path', file ,{
+
+//                 })
+
+//                 showAlertMessage('success', 'Success', 'Severe actions and documentation saved successfully');
+//                 setShowSevereModal(false);
+//                 setSevereSelectedAction('');
+//                 setUploadedFiles([]);
+//                 setCustomAction('');
+//                 setIsDropdownOpen(false);
+
+//                 // setTimeout(() => {
+//                 //     window.location.reload();
+//                 // }, 2000);
+
+//             } catch (err) {
+//                 console.error('Unable to save severe action:', err);
+//                 showAlertMessage('error', 'Unable to Save', 'Something went wrong, please try again.');
+//             } finally {
+//                 setIsSevereSaving(false);
+//             }
+//         }, [severeSelectedAction, uploadedFiles, asset_analysis_id, showAlertMessage]);
+
+
+
+// const handleSevereSave = useCallback(async () => {
+//     if (!severeSelectedAction || severeSelectedAction === '') {
+//         showAlertMessage('error', 'Empty Field', 'Please select at least one action before saving.');
+//         return;
+//     }
+
+//     const empInfo = JSON.parse(localStorage.getItem("user"));
+//     setIsSevereSaving(true);
+
+//     try {
+//         // First, upload all files to Supabase Storage
+//         const uploadedFilePaths = [];
+        
+//         for (const fileItem of uploadedFiles) {
+//             const file = fileItem.file;
+//             const timestamp = Date.now();
+//             const filePath = `${asset_analysis_id}/${timestamp}_${file.name}`;
+            
+//             // Upload to Supabase Storage
+//             const { data: uploadData, error: uploadError } = await supabase.storage
+//                 .from('documentation') // Your bucket name
+//                 .upload(filePath, file, {
+//                     cacheControl: '3600',
+//                     upsert: false
+//                 });
+            
+//             if (uploadError) {
+//                 throw uploadError;
+//             }
+            
+//             // Store the public URL or path
+//             const { data: publicUrlData } = supabase.storage
+//                 .from('documentation')
+//                 .getPublicUrl(filePath);
+            
+//             uploadedFilePaths.push({
+               
+//                 path: filePath,
+//                 // url: publicUrlData.publicUrl
+//             });
+//         }
+        
+//         // Update the database with file information
+//         await supabase.from('asset_analysis_master').update({
+//             action_taken: severeSelectedAction,
+//             documentation: JSON.stringify(uploadedFilePaths), // Store array of file objects
+//             updated_by: empInfo.user_name,
+//             updated_at: new Date()
+//         }).eq('asset_analysis_id', asset_analysis_id);
+        
+//         showAlertMessage('success', 'Success', 'Severe actions and documentation saved successfully');
+//         setShowSevereModal(false);
+//         setSevereSelectedAction('');
+//         setUploadedFiles([]);
+//         setCustomAction('');
+//         setIsDropdownOpen(false);
+        
+//     } catch (err) {
+//         console.error('Unable to save severe action:', err);
+//         showAlertMessage('error', 'Unable to Save', 'Something went wrong, please try again.');
+//     } finally {
+//         setIsSevereSaving(false);
+//     }
+// }, [severeSelectedAction, uploadedFiles, asset_analysis_id, showAlertMessage]);
+
+
+const handleSevereSave = useCallback(async () => {
+    if (!severeSelectedAction || severeSelectedAction === '') {
+        showAlertMessage('error', 'Empty Field', 'Please select at least one action before saving.');
+        return;
+    }
+
+    const empInfo = JSON.parse(localStorage.getItem("user"));
+    setIsSevereSaving(true);
+
+    try {
+        const uploadedFilePaths = [];
+        
+        for (const fileItem of uploadedFiles) {
+            const file = fileItem.file;
+            const timestamp = Date.now();
+            const filePath = `${asset_analysis_id}/${timestamp}_${file.name}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('documentation')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
                 });
-
-                let fileNames = [];
-                    uploadedFiles.forEach((file, index) => {
-                    fileNames.push(file.file.name); // Store just the file name
-                    });
-
-                // // Send as multipart/form-data
-                // await axios.post(`${config.baseApi}/assetsAnalysis/update-severe-action`, formData, {
-                //     headers: {
-                //         'Content-Type': 'multipart/form-data'
-                //     }
-                // });
-
-                await supabase.from('asset_analysis_master').update({
-                    severe_action: severeSelectedAction,
-                    documentation: JSON.stringify(fileNames),
-                    updated_by: empInfo.user_name,
-                    updated_at: new Date()
-                }).eq('asset_analysis_id', asset_analysis_id)
-
-                showAlertMessage('success', 'Success', 'Severe actions and documentation saved successfully');
-                setShowSevereModal(false);
-                setSevereSelectedAction('');
-                setUploadedFiles([]);
-                setCustomAction('');
-                setIsDropdownOpen(false);
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-
-            } catch (err) {
-                console.error('Unable to save severe action:', err);
-                showAlertMessage('error', 'Unable to Save', 'Something went wrong, please try again.');
-            } finally {
-                setIsSevereSaving(false);
+            
+            if (uploadError) {
+                throw uploadError;
             }
-        }, [severeSelectedAction, uploadedFiles, asset_analysis_id, showAlertMessage]);
+            
+            // Store just the path, not the full object
+            uploadedFilePaths.push(filePath);
+        }
+        
+        await supabase.from('asset_analysis_master').update({
+            action_taken: severeSelectedAction,
+            documentation: JSON.stringify(uploadedFilePaths),
+            updated_by: empInfo.user_name,
+            updated_at: new Date()
+        }).eq('asset_analysis_id', asset_analysis_id);
+        
+        showAlertMessage('success', 'Success', 'Severe actions and documentation saved successfully');
+        setShowSevereModal(false);
+        setSevereSelectedAction('');
+        setUploadedFiles([]);
+        setCustomAction('');
+        setIsDropdownOpen(false);
+        
+    } catch (err) {
+        console.error('Unable to save severe action:', err);
+        showAlertMessage('error', 'Unable to Save', 'Something went wrong, please try again.');
+    } finally {
+        setIsSevereSaving(false);
+    }
+}, [severeSelectedAction, uploadedFiles, asset_analysis_id, showAlertMessage]);
+
+
 
         const getFileIcon = (fileType) => {
             if (fileType === 'image') return 'image';
@@ -1840,711 +1987,684 @@ export default function ViewSubmittedAsset() {
         );
     });
 
-    // Documentation Viewer Component
-    const DocumentationViewer = () => {
-        const [imageLoadErrors, setImageLoadErrors] = useState({});
-        const [videoLoadErrors, setVideoLoadErrors] = useState({});
-        const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'images', 'videos'
-        const [searchTerm, setSearchTerm] = useState('');
-        const [sortBy, setSortBy] = useState('name'); // 'name', 'date', 'type'
-        const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list'
+const DocumentationViewer = () => {
+    const [imageLoadErrors, setImageLoadErrors] = useState({});
+    const [videoLoadErrors, setVideoLoadErrors] = useState({});
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
 
-        const getFileUrl = (filename) => {
-            let cleanFilename = filename.trim();
-            if (cleanFilename.includes('\\') || cleanFilename.includes('/')) {
-                cleanFilename = cleanFilename.split('\\').pop().split('/').pop();
+    // Get file URL from Supabase Storage
+    const getFileUrl = (filePath) => {
+        try {
+            // Handle different path formats
+            let path = filePath;
+            
+            // If it's an object with path property
+            if (typeof filePath === 'object' && filePath.path) {
+                path = filePath.path;
             }
-            return `${config.baseApi}/documentation/${encodeURIComponent(cleanFilename)}`;
-        };
+            
+            // Clean the path - remove any quotes or extra spaces
+            let cleanPath = String(path).trim();
+            cleanPath = cleanPath.replace(/^["']|["']$/g, ''); // Remove quotes if present
+            
+            console.log('Getting URL for path:', cleanPath);
+            
+            // Get public URL from Supabase
+            const { data } = supabase.storage
+                .from('documentation')
+                .getPublicUrl(cleanPath);
+            
+            console.log('Generated URL:', data.publicUrl);
+            return data.publicUrl;
+        } catch (error) {
+            console.error('Error getting file URL for:', filePath, error);
+            return '';
+        }
+    };
 
-        const isImage = (filename) => {
-            const ext = filename.split('.').pop().toLowerCase();
-            return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext);
-        };
+    const isImage = (filename) => {
+        const ext = String(filename).split('.').pop().toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'jfif'].includes(ext);
+    };
 
-        const isVideo = (filename) => {
-            const ext = filename.split('.').pop().toLowerCase();
-            return ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext);
-        };
+    const isVideo = (filename) => {
+        const ext = String(filename).split('.').pop().toLowerCase();
+        return ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext);
+    };
 
-        const getFileIcon = (filename) => {
-            if (isImage(filename)) return 'image';
-            if (isVideo(filename)) return 'video';
-            return 'file';
-        };
+    const getFileIcon = (filename) => {
+        if (isImage(filename)) return 'image';
+        if (isVideo(filename)) return 'video';
+        return 'file';
+    };
 
-        const getFileSize = (filename) => {
-            // This would need actual file size from API, returning placeholder
-            const sizes = ['1.2 MB', '2.5 MB', '0.8 MB', '3.1 MB', '1.5 MB'];
+    const getFileName = (file) => {
+        // Handle different formats
+        let path = file;
+        if (typeof file === 'object' && file.path) {
+            path = file.path;
+        }
+        // Remove quotes and get the last part after slash
+        const cleanPath = String(path).replace(/^["']|["']$/g, '');
+        return cleanPath.split('/').pop() || cleanPath;
+    };
 
-            return sizes[Math.floor(Math.random() * sizes.length)];
-        };
+    const handleImageError = (filename, filePath) => {
+        setImageLoadErrors(prev => ({ ...prev, [filename]: true }));
+        console.error('Failed to load image:', filename, 'Path:', filePath);
+        const url = getFileUrl(filePath);
+        console.error('Attempted URL:', url);
+    };
 
-        const handleImageError = (filename) => {
-            setImageLoadErrors(prev => ({ ...prev, [filename]: true }));
-        };
+    const handleVideoError = (filename, filePath) => {
+        setVideoLoadErrors(prev => ({ ...prev, [filename]: true }));
+        console.error('Failed to load video:', filename, 'Path:', filePath);
+    };
 
-        const handleVideoError = (filename) => {
-            setVideoLoadErrors(prev => ({ ...prev, [filename]: true }));
-        };
+    const getFilteredFiles = () => {
+        let files = [...documentationFiles];
 
-        // Filter and sort files
-        const getFilteredFiles = () => {
-            let files = [...documentationFiles];
+        if (selectedCategory === 'images') {
+            files = files.filter(f => isImage(getFileName(f)));
+        } else if (selectedCategory === 'videos') {
+            files = files.filter(f => isVideo(getFileName(f)));
+        }
 
-            // Filter by category
-            if (selectedCategory === 'images') {
-                files = files.filter(f => isImage(f));
-            } else if (selectedCategory === 'videos') {
-                files = files.filter(f => isVideo(f));
-            }
+        if (searchTerm) {
+            files = files.filter(f =>
+                getFileName(f).toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
 
-            // Filter by search term
-            if (searchTerm) {
-                files = files.filter(f =>
-                    f.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-            }
+        return files;
+    };
 
-            // Sort files
-            files.sort((a, b) => {
-                if (sortBy === 'name') {
-                    return a.localeCompare(b);
-                } else if (sortBy === 'type') {
-                    const typeA = isImage(a) ? 'image' : (isVideo(a) ? 'video' : 'other');
-                    const typeB = isImage(b) ? 'image' : (isVideo(b) ? 'video' : 'other');
-                    return typeA.localeCompare(typeB);
-                }
-                return 0;
-            });
+    const filteredFiles = getFilteredFiles();
+    const imageCount = documentationFiles.filter(f => isImage(getFileName(f))).length;
+    const videoCount = documentationFiles.filter(f => isVideo(getFileName(f))).length;
 
-            return files;
-        };
+    // Debug logging
+    console.log('Documentation files:', documentationFiles);
+    console.log('Filtered files:', filteredFiles);
+    console.log('Image count:', imageCount, 'Video count:', videoCount);
 
-        const filteredFiles = getFilteredFiles();
-        const imageCount = documentationFiles.filter(f => isImage(f)).length;
-        const videoCount = documentationFiles.filter(f => isVideo(f)).length;
+    if (documentationFiles.length === 0) return null;
 
-        if (documentationFiles.length === 0) return null;
-
-        return (
-            <>
+    return (
+        <>
+            <div
+                className="modern-card"
+                style={{
+                    marginBottom: '24px',
+                    background: 'linear-gradient(135deg, #ffffff 0%, #fef9f0 100%)',
+                    borderRadius: '20px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                    border: '1px solid rgba(245,158,11,0.15)'
+                }}
+            >
                 <div
-                    className="modern-card"
                     style={{
-                        marginBottom: '24px',
-                        background: 'linear-gradient(135deg, #ffffff 0%, #fef9f0 100%)',
-                        borderRadius: '20px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                        border: '1px solid rgba(245,158,11,0.15)'
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '3px',
+                        background: 'linear-gradient(90deg, #f59e0b 0%, #f97316 50%, #fbbf24 100%)',
                     }}
-                >
-                    {/* Animated gradient border */}
-                    <div
+                />
+
+                <div style={{ padding: '24px 24px 0 24px' }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        flexWrap: 'wrap',
+                        gap: '16px',
+                        marginBottom: '20px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 6px 14px rgba(245,158,11,0.25)'
+                            }}>
+                                <FeatherIcon icon="folder" size={22} color="white" />
+                            </div>
+                            <div>
+                                <h4 style={{
+                                    margin: 0,
+                                    fontWeight: '700',
+                                    color: '#2d1f0f',
+                                    fontSize: '20px',
+                                    letterSpacing: '-0.3px'
+                                }}>
+                                    Documentation
+                                </h4>
+                                <p style={{
+                                    margin: '4px 0 0',
+                                    fontSize: '13px',
+                                    color: '#8b7355',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px'
+                                }}>
+                                    <span>
+                                        <FeatherIcon icon="image" size={12} style={{ marginRight: '4px' }} />
+                                        {imageCount} Images
+                                    </span>
+                                    <span>
+                                        <FeatherIcon icon="video" size={12} style={{ marginRight: '4px' }} />
+                                        {videoCount} Videos
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', background: '#f5f0e8', padding: '4px', borderRadius: '12px' }}>
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                style={{
+                                    padding: '6px 12px',
+                                    background: viewMode === 'grid' ? 'white' : 'transparent',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    color: viewMode === 'grid' ? '#f59e0b' : '#8b7355',
+                                    boxShadow: viewMode === 'grid' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                                }}
+                            >
+                                <FeatherIcon icon="grid" size={14} />
+                                Grid
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                style={{
+                                    padding: '6px 12px',
+                                    background: viewMode === 'list' ? 'white' : 'transparent',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    color: viewMode === 'list' ? '#f59e0b' : '#8b7355',
+                                    boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                                }}
+                            >
+                                <FeatherIcon icon="list" size={14} />
+                                List
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        padding: '16px 0',
+                        borderTop: '1px solid rgba(245,158,11,0.1)',
+                        borderBottom: '1px solid rgba(245,158,11,0.1)'
+                    }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => setSelectedCategory('all')}
+                                style={{
+                                    padding: '6px 14px',
+                                    background: selectedCategory === 'all' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
+                                    border: selectedCategory === 'all' ? 'none' : '1px solid #e8dcc8',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    color: selectedCategory === 'all' ? 'white' : '#8b7355',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                All Files ({documentationFiles.length})
+                            </button>
+                            <button
+                                onClick={() => setSelectedCategory('images')}
+                                style={{
+                                    padding: '6px 14px',
+                                    background: selectedCategory === 'images' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
+                                    border: selectedCategory === 'images' ? 'none' : '1px solid #e8dcc8',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    color: selectedCategory === 'images' ? 'white' : '#8b7355'
+                                }}
+                            >
+                                <FeatherIcon icon="image" size={12} style={{ marginRight: '4px' }} />
+                                Images ({imageCount})
+                            </button>
+                            <button
+                                onClick={() => setSelectedCategory('videos')}
+                                style={{
+                                    padding: '6px 14px',
+                                    background: selectedCategory === 'videos' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
+                                    border: selectedCategory === 'videos' ? 'none' : '1px solid #e8dcc8',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    color: selectedCategory === 'videos' ? 'white' : '#8b7355'
+                                }}
+                            >
+                                <FeatherIcon icon="video" size={12} style={{ marginRight: '4px' }} />
+                                Videos ({videoCount})
+                            </button>
+                        </div>
+
+                        <div style={{ position: 'relative', width: 'clamp(180px, 30vw, 260px)' }}>
+                            <FeatherIcon 
+                                icon="search" 
+                                size={14} 
+                                style={{ 
+                                    position: 'absolute', 
+                                    left: '12px', 
+                                    top: '50%', 
+                                    transform: 'translateY(-50%)',
+                                    color: '#c4b5a0'
+                                }} 
+                            />
+                            <input
+                                type="text"
+                                placeholder="Search files..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px 8px 36px',
+                                    border: '1px solid #e8dcc8',
+                                    borderRadius: '20px',
+                                    fontSize: '13px',
+                                    outline: 'none',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+                                onBlur={(e) => e.target.style.borderColor = '#e8dcc8'}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ padding: '24px' }}>
+                    {filteredFiles.length === 0 ? (
+                        <div style={{
+                            textAlign: 'center',
+                            padding: '60px 20px',
+                            color: '#c4b5a0'
+                        }}>
+                            <FeatherIcon icon="folder" size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
+                            <p>No files match your filters</p>
+                            <button
+                                onClick={() => {
+                                    setSelectedCategory('all');
+                                    setSearchTerm('');
+                                }}
+                                style={{
+                                    marginTop: '12px',
+                                    padding: '6px 16px',
+                                    background: '#f5f0e8',
+                                    border: 'none',
+                                    borderRadius: '20px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    color: '#8b7355'
+                                }}
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+                    ) : viewMode === 'grid' ? (
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '20px'
+                        }}>
+                            {filteredFiles.map((file, index) => {
+                                const fileName = getFileName(file);
+                                const fileUrl = getFileUrl(file);
+                                const isImageFile = isImage(fileName);
+                                const isVideoFile = isVideo(fileName);
+                                const hasImageError = imageLoadErrors[fileName];
+                                const hasVideoError = videoLoadErrors[fileName];
+
+                                if (!fileUrl) {
+                                    console.log('No URL generated for:', file);
+                                    return null;
+                                }
+
+                                return (
+                                    <div
+                                        key={index}
+                                        onClick={() => {
+                                            if (!hasImageError && !hasVideoError && fileUrl) {
+                                                setSelectedDocFile({
+                                                    filename: fileName,
+                                                    type: isImageFile ? 'image' : isVideoFile ? 'video' : 'other',
+                                                    url: fileUrl
+                                                });
+                                                setShowDocumentationModal(true);
+                                            }
+                                        }}
+                                        style={{
+                                            cursor: (!hasImageError && !hasVideoError && fileUrl) ? 'pointer' : 'default',
+                                            borderRadius: '16px',
+                                            overflow: 'hidden',
+                                            background: 'white',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            border: '1px solid #f0e4d0',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '12px',
+                                            right: '12px',
+                                            zIndex: 2,
+                                            background: 'rgba(0,0,0,0.7)',
+                                            backdropFilter: 'blur(8px)',
+                                            borderRadius: '20px',
+                                            padding: '4px 10px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            fontSize: '11px',
+                                            fontWeight: '600',
+                                            color: 'white'
+                                        }}>
+                                            <FeatherIcon icon={getFileIcon(fileName)} size={12} />
+                                            {isImageFile ? 'IMAGE' : isVideoFile ? 'VIDEO' : 'FILE'}
+                                        </div>
+
+                                        <div style={{ position: 'relative', background: '#faf8f4', minHeight: '200px' }}>
+                                            {isImageFile && !hasImageError && (
+                                                <img
+                                                    src={fileUrl}
+                                                    alt={fileName}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '200px',
+                                                        objectFit: 'cover',
+                                                        display: 'block'
+                                                    }}
+                                                    onError={() => handleImageError(fileName, file)}
+                                                />
+                                            )}
+                                            {(isImageFile && hasImageError) && (
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '200px',
+                                                    background: 'linear-gradient(135deg, #f5f0e8 0%, #ede5d8 100%)',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '12px'
+                                                }}>
+                                                    <FeatherIcon icon="alert-circle" size={48} color="#c4b5a0" />
+                                                    <span style={{ color: '#8b7355', fontSize: '13px' }}>Preview not available</span>
+                                                    <span style={{ color: '#8b7355', fontSize: '11px' }}>{fileName}</span>
+                                                </div>
+                                            )}
+                                            {isVideoFile && !hasVideoError && (
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '200px',
+                                                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '12px',
+                                                    cursor: 'pointer'
+                                                }}>
+                                                    <div style={{
+                                                        width: '60px',
+                                                        height: '60px',
+                                                        background: 'rgba(245,158,11,0.9)',
+                                                        borderRadius: '50%',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        transition: 'transform 0.2s ease'
+                                                    }}>
+                                                        <FeatherIcon icon="play" size={28} color="white" style={{ marginLeft: '4px' }} />
+                                                    </div>
+                                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '500' }}>Click to play video</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div style={{ padding: '14px' }}>
+                                            <div style={{
+                                                fontSize: '13px',
+                                                fontWeight: '600',
+                                                color: '#2d1f0f',
+                                                marginBottom: '8px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {fileName.length > 40 ? fileName.substring(0, 40) + '...' : fileName}
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                fontSize: '11px',
+                                                color: '#a89880'
+                                            }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <FeatherIcon icon="maximize-2" size={10} />
+                                                    Click to view full size
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {filteredFiles.map((file, index) => {
+                                const fileName = getFileName(file);
+                                const fileUrl = getFileUrl(file);
+                                const isImageFile = isImage(fileName);
+                                const isVideoFile = isVideo(fileName);
+                                const hasImageError = imageLoadErrors[fileName];
+                                const hasVideoError = videoLoadErrors[fileName];
+
+                                if (!fileUrl) return null;
+
+                                return (
+                                    <div
+                                        key={index}
+                                        onClick={() => {
+                                            if (!hasImageError && !hasVideoError && fileUrl) {
+                                                setSelectedDocFile({
+                                                    filename: fileName,
+                                                    type: isImageFile ? 'image' : isVideoFile ? 'video' : 'other',
+                                                    url: fileUrl
+                                                });
+                                                setShowDocumentationModal(true);
+                                            }
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '16px',
+                                            padding: '12px 16px',
+                                            background: 'white',
+                                            borderRadius: '12px',
+                                            cursor: (!hasImageError && !hasVideoError && fileUrl) ? 'pointer' : 'default',
+                                            transition: 'all 0.2s ease',
+                                            border: '1px solid #f0e4d0'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '10px',
+                                            background: 'linear-gradient(135deg, #f5f0e8 0%, #ede5d8 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            <FeatherIcon
+                                                icon={getFileIcon(fileName)}
+                                                size={24}
+                                                color={isImageFile ? '#3b82f6' : isVideoFile ? '#ef4444' : '#8b7355'}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: '600', fontSize: '14px', color: '#2d1f0f', marginBottom: '4px' }}>
+                                                {fileName}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#a89880' }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <FeatherIcon icon={isImageFile ? 'image' : 'video'} size={10} />
+                                                    {isImageFile ? 'Image' : 'Video'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <FeatherIcon icon="chevron-right" size={18} color="#c4b5a0" />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{
+                    padding: '16px 24px',
+                    background: 'rgba(245,158,11,0.03)',
+                    borderTop: '1px solid rgba(245,158,11,0.1)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '12px',
+                    color: '#8b7355'
+                }}>
+                    <span>
+                        Showing {filteredFiles.length} of {documentationFiles.length} files
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <FeatherIcon icon="info" size={12} />
+                        Click any file to view in full screen
+                    </span>
+                </div>
+            </div>
+
+            <Modal
+                show={showDocumentationModal}
+                onHide={() => {
+                    setShowDocumentationModal(false);
+                    setSelectedDocFile(null);
+                }}
+                centered
+                size="lg"
+                contentClassName="border-0 bg-transparent"
+            >
+                <div style={{
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    background: '#1a1a1a',
+                    position: 'relative',
+                    animation: 'modalFadeIn 0.3s ease-out'
+                }}>
+                    <Modal.Header
+                        closeButton
                         style={{
+                            background: 'rgba(0,0,0,0.9)',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
                             position: 'absolute',
                             top: 0,
                             left: 0,
                             right: 0,
-                            height: '3px',
-                            background: 'linear-gradient(90deg, #f59e0b 0%, #f97316 50%, #fbbf24 100%)',
+                            zIndex: 10,
+                            backdropFilter: 'blur(10px)'
                         }}
-                    />
-
-                    {/* Header Section */}
-                    <div style={{ padding: '24px 24px 0 24px' }}>
-                        <div style={{
+                    >
+                        <Modal.Title style={{
+                            color: 'white',
+                            fontSize: '14px',
                             display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            flexWrap: 'wrap',
-                            gap: '16px',
-                            marginBottom: '20px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{
-                                    background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
-                                    width: '44px',
-                                    height: '44px',
-                                    borderRadius: '14px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 6px 14px rgba(245,158,11,0.25)'
-                                }}>
-                                    <FeatherIcon icon="folder" size={22} color="white" />
-                                </div>
-                                <div>
-                                    <h4
-                                        style={{
-                                            margin: 0,
-                                            fontWeight: '700',
-                                            color: '#2d1f0f',
-                                            fontSize: '20px',
-                                            letterSpacing: '-0.3px'
-                                        }}
-                                    >
-                                        Documentation
-                                    </h4>
-                                    <p style={{
-                                        margin: '4px 0 0',
-                                        fontSize: '13px',
-                                        color: '#8b7355',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px'
-                                    }}>
-                                        <span>
-                                            <FeatherIcon icon="image" size={12} style={{ marginRight: '4px' }} />
-                                            {imageCount} Images
-                                        </span>
-                                        <span>
-                                            <FeatherIcon icon="video" size={12} style={{ marginRight: '4px' }} />
-                                            {videoCount} Videos
-                                        </span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* View Toggle */}
-                            <div style={{ display: 'flex', gap: '8px', background: '#f5f0e8', padding: '4px', borderRadius: '12px' }}>
-                                <button
-                                    onClick={() => setViewMode('grid')}
-                                    style={{
-                                        padding: '6px 12px',
-                                        background: viewMode === 'grid' ? 'white' : 'transparent',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontSize: '13px',
-                                        fontWeight: '500',
-                                        color: viewMode === 'grid' ? '#f59e0b' : '#8b7355',
-                                        boxShadow: viewMode === 'grid' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                                    }}
-                                >
-                                    <FeatherIcon icon="grid" size={14} />
-                                    Grid
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('list')}
-                                    style={{
-                                        padding: '6px 12px',
-                                        background: viewMode === 'list' ? 'white' : 'transparent',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        fontSize: '13px',
-                                        fontWeight: '500',
-                                        color: viewMode === 'list' ? '#f59e0b' : '#8b7355',
-                                        boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                                    }}
-                                >
-                                    <FeatherIcon icon="list" size={14} />
-                                    List
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Filters Bar */}
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            flexWrap: 'wrap',
-                            gap: '12px',
-                            padding: '16px 0',
-                            borderTop: '1px solid rgba(245,158,11,0.1)',
-                            borderBottom: '1px solid rgba(245,158,11,0.1)'
+                            gap: '8px'
                         }}>
-                            {/* Category Filters */}
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                <button
-                                    onClick={() => setSelectedCategory('all')}
-                                    style={{
-                                        padding: '6px 14px',
-                                        background: selectedCategory === 'all' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
-                                        border: selectedCategory === 'all' ? 'none' : '1px solid #e8dcc8',
-                                        borderRadius: '20px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        color: selectedCategory === 'all' ? 'white' : '#8b7355',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    All Files ({documentationFiles.length})
-                                </button>
-                                <button
-                                    onClick={() => setSelectedCategory('images')}
-                                    style={{
-                                        padding: '6px 14px',
-                                        background: selectedCategory === 'images' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
-                                        border: selectedCategory === 'images' ? 'none' : '1px solid #e8dcc8',
-                                        borderRadius: '20px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        color: selectedCategory === 'images' ? 'white' : '#8b7355'
-                                    }}
-                                >
-                                    <FeatherIcon icon="image" size={12} style={{ marginRight: '4px' }} />
-                                    Images ({imageCount})
-                                </button>
-                                <button
-                                    onClick={() => setSelectedCategory('videos')}
-                                    style={{
-                                        padding: '6px 14px',
-                                        background: selectedCategory === 'videos' ? 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' : 'white',
-                                        border: selectedCategory === 'videos' ? 'none' : '1px solid #e8dcc8',
-                                        borderRadius: '20px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        color: selectedCategory === 'videos' ? 'white' : '#8b7355'
-                                    }}
-                                >
-                                    <FeatherIcon icon="video" size={12} style={{ marginRight: '4px' }} />
-                                    Videos ({videoCount})
-                                </button>
-                            </div>
-
-
-                        </div>
-                    </div>
-
-                    {/* Files Grid/List */}
-                    <div style={{ padding: '24px' }}>
-                        {filteredFiles.length === 0 ? (
-                            <div style={{
-                                textAlign: 'center',
-                                padding: '60px 20px',
-                                color: '#c4b5a0'
-                            }}>
-                                <FeatherIcon icon="folder" size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
-                                <p>No files match your filters</p>
-                                <button
-                                    onClick={() => {
-                                        setSelectedCategory('all');
-                                        setSearchTerm('');
-                                    }}
-                                    style={{
-                                        marginTop: '12px',
-                                        padding: '6px 16px',
-                                        background: '#f5f0e8',
-                                        border: 'none',
-                                        borderRadius: '20px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        color: '#8b7355'
-                                    }}
-                                >
-                                    Clear Filters
-                                </button>
-                            </div>
-                        ) : viewMode === 'grid' ? (
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                                gap: '20px'
-                            }}>
-                                {filteredFiles.map((filename, index) => {
-                                    const fileUrl = getFileUrl(filename);
-                                    const isImageFile = isImage(filename);
-                                    const isVideoFile = isVideo(filename);
-                                    const hasImageError = imageLoadErrors[filename];
-                                    const hasVideoError = videoLoadErrors[filename];
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            onClick={() => {
-                                                if (!hasImageError && !hasVideoError) {
-                                                    setSelectedDocFile({
-                                                        filename,
-                                                        type: isImageFile ? 'image' : isVideoFile ? 'video' : 'other',
-                                                        url: fileUrl
-                                                    });
-                                                    setShowDocumentationModal(true);
-                                                }
-                                            }}
-                                            style={{
-                                                cursor: (!hasImageError && !hasVideoError) ? 'pointer' : 'default',
-                                                borderRadius: '16px',
-                                                overflow: 'hidden',
-                                                background: 'white',
-                                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                border: '1px solid #f0e4d0',
-                                                position: 'relative'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (!hasImageError && !hasVideoError) {
-                                                    e.currentTarget.style.transform = 'translateY(-4px)';
-                                                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.12)';
-                                                    e.currentTarget.style.borderColor = '#f59e0b';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'translateY(0)';
-                                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
-                                                e.currentTarget.style.borderColor = '#f0e4d0';
-                                            }}
-                                        >
-                                            {/* File Type Badge */}
-                                            <div style={{
-                                                position: 'absolute',
-                                                top: '12px',
-                                                right: '12px',
-                                                zIndex: 2,
-                                                background: 'rgba(0,0,0,0.7)',
-                                                backdropFilter: 'blur(8px)',
-                                                borderRadius: '20px',
-                                                padding: '4px 10px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                fontSize: '11px',
-                                                fontWeight: '600',
-                                                color: 'white'
-                                            }}>
-                                                <FeatherIcon icon={getFileIcon(filename)} size={12} />
-                                                {isImageFile ? 'IMAGE' : isVideoFile ? 'VIDEO' : 'FILE'}
-                                            </div>
-
-                                            {/* Preview Area */}
-                                            <div style={{ position: 'relative', background: '#faf8f4', minHeight: '200px' }}>
-                                                {isImageFile && !hasImageError && (
-                                                    <img
-                                                        src={fileUrl}
-                                                        alt={filename}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '200px',
-                                                            objectFit: 'cover',
-                                                            display: 'block'
-                                                        }}
-                                                        onError={() => handleImageError(filename)}
-                                                    />
-                                                )}
-                                                {isImageFile && hasImageError && (
-                                                    <div style={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        background: 'linear-gradient(135deg, #f5f0e8 0%, #ede5d8 100%)',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '12px'
-                                                    }}>
-                                                        <FeatherIcon icon="alert-circle" size={48} color="#c4b5a0" />
-                                                        <span style={{ color: '#8b7355', fontSize: '13px' }}>Preview not available</span>
-                                                    </div>
-                                                )}
-                                                {isVideoFile && !hasVideoError && (
-                                                    <div style={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '12px',
-                                                        cursor: 'pointer'
-                                                    }}>
-                                                        <div style={{
-                                                            width: '60px',
-                                                            height: '60px',
-                                                            background: 'rgba(245,158,11,0.9)',
-                                                            borderRadius: '50%',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            transition: 'transform 0.2s ease'
-                                                        }}>
-                                                            <FeatherIcon icon="play" size={28} color="white" style={{ marginLeft: '4px' }} />
-                                                        </div>
-                                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '500' }}>Click to play video</span>
-                                                    </div>
-                                                )}
-                                                {isVideoFile && hasVideoError && (
-                                                    <div style={{
-                                                        width: '100%',
-                                                        height: '200px',
-                                                        background: '#f5f0e8',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '12px'
-                                                    }}>
-                                                        <FeatherIcon icon="alert-circle" size={48} color="#c4b5a0" />
-                                                        <span style={{ color: '#8b7355', fontSize: '13px' }}>Video failed to load</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* File Info */}
-                                            <div style={{ padding: '14px' }}>
-                                                <div style={{
-                                                    fontSize: '13px',
-                                                    fontWeight: '600',
-                                                    color: '#2d1f0f',
-                                                    marginBottom: '8px',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    {filename.length > 40 ? filename.substring(0, 40) + '...' : filename}
-                                                </div>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    fontSize: '11px',
-                                                    color: '#a89880'
-                                                }}>
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <FeatherIcon icon="maximize-2" size={10} />
-                                                        Click to view full size
-                                                    </span>
-                                                    <span>{getFileSize(filename)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            // List View
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {filteredFiles.map((filename, index) => {
-                                    const fileUrl = getFileUrl(filename);
-                                    const isImageFile = isImage(filename);
-                                    const isVideoFile = isVideo(filename);
-                                    const hasImageError = imageLoadErrors[filename];
-                                    const hasVideoError = videoLoadErrors[filename];
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            onClick={() => {
-                                                if (!hasImageError && !hasVideoError) {
-                                                    setSelectedDocFile({
-                                                        filename,
-                                                        type: isImageFile ? 'image' : isVideoFile ? 'video' : 'other',
-                                                        url: fileUrl
-                                                    });
-                                                    setShowDocumentationModal(true);
-                                                }
-                                            }}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '16px',
-                                                padding: '12px 16px',
-                                                background: 'white',
-                                                borderRadius: '12px',
-                                                cursor: (!hasImageError && !hasVideoError) ? 'pointer' : 'default',
-                                                transition: 'all 0.2s ease',
-                                                border: '1px solid #f0e4d0'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (!hasImageError && !hasVideoError) {
-                                                    e.currentTarget.style.background = '#fef9f0';
-                                                    e.currentTarget.style.borderColor = '#f59e0b';
-                                                    e.currentTarget.style.transform = 'translateX(4px)';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.background = 'white';
-                                                e.currentTarget.style.borderColor = '#f0e4d0';
-                                                e.currentTarget.style.transform = 'translateX(0)';
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: '48px',
-                                                height: '48px',
-                                                borderRadius: '10px',
-                                                background: 'linear-gradient(135deg, #f5f0e8 0%, #ede5d8 100%)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexShrink: 0
-                                            }}>
-                                                <FeatherIcon
-                                                    icon={getFileIcon(filename)}
-                                                    size={24}
-                                                    color={isImageFile ? '#3b82f6' : isVideoFile ? '#ef4444' : '#8b7355'}
-                                                />
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: '600', fontSize: '14px', color: '#2d1f0f', marginBottom: '4px' }}>
-                                                    {filename}
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#a89880' }}>
-                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <FeatherIcon icon={isImageFile ? 'image' : 'video'} size={10} />
-                                                        {isImageFile ? 'Image' : 'Video'}
-                                                    </span>
-                                                    <span>{getFileSize(filename)}</span>
-                                                </div>
-                                            </div>
-                                            <FeatherIcon icon="chevron-right" size={18} color="#c4b5a0" />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Stats Footer */}
-                    <div style={{
-                        padding: '16px 24px',
-                        background: 'rgba(245,158,11,0.03)',
-                        borderTop: '1px solid rgba(245,158,11,0.1)',
+                            <FeatherIcon icon={selectedDocFile?.type === 'image' ? 'image' : 'video'} size={16} />
+                            {selectedDocFile?.filename || 'Documentation Viewer'}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body style={{
+                        padding: 0,
+                        minHeight: '500px',
                         display: 'flex',
-                        justifyContent: 'space-between',
                         alignItems: 'center',
-                        fontSize: '12px',
-                        color: '#8b7355'
+                        justifyContent: 'center',
+                        background: '#000'
                     }}>
-                        <span>
-                            Showing {filteredFiles.length} of {documentationFiles.length} files
-                        </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FeatherIcon icon="info" size={12} />
-                            Click any file to view in full screen
-                        </span>
-                    </div>
+                        {selectedDocFile?.type === 'image' && (
+                            <img
+                                src={selectedDocFile.url}
+                                alt={selectedDocFile.filename}
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '80vh',
+                                    objectFit: 'contain'
+                                }}
+                                onError={(e) => {
+                                    console.error('Modal image failed to load:', selectedDocFile.url);
+                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect width=\'400\' height=\'300\' fill=\'%23333\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23fff\'%3EImage failed to load%3C/text%3E%3C/svg%3E';
+                                }}
+                            />
+                        )}
+                        {selectedDocFile?.type === 'video' && (
+                            <video
+                                controls
+                                autoPlay
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '80vh'
+                                }}
+                                onError={() => {
+                                    setShowDocumentationModal(false);
+                                    showAlertMessage('error', 'Error', 'Failed to load video file');
+                                }}
+                            >
+                                <source src={selectedDocFile.url} />
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
+                    </Modal.Body>
                 </div>
-
-                {/* Modal for viewing documentation - Enhanced */}
-                <Modal
-                    show={showDocumentationModal}
-                    onHide={() => {
-                        setShowDocumentationModal(false);
-                        setSelectedDocFile(null);
-                    }}
-                    centered
-                    size="lg"
-                    contentClassName="border-0 bg-transparent"
-                >
-                    <div style={{
-                        borderRadius: '24px',
-                        overflow: 'hidden',
-                        background: '#1a1a1a',
-                        position: 'relative',
-                        animation: 'modalFadeIn 0.3s ease-out'
-                    }}>
-                        <Modal.Header
-                            closeButton
-                            style={{
-                                background: 'rgba(0,0,0,0.9)',
-                                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                zIndex: 10,
-                                backdropFilter: 'blur(10px)'
-                            }}
-                        >
-                            <Modal.Title style={{
-                                color: 'white',
-                                fontSize: '14px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}>
-                                <FeatherIcon icon={selectedDocFile?.type === 'image' ? 'image' : 'video'} size={16} />
-                                {selectedDocFile?.filename || 'Documentation Viewer'}
-                            </Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body style={{
-                            padding: 0,
-                            minHeight: '500px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: '#000'
-                        }}>
-                            {selectedDocFile?.type === 'image' && (
-                                <img
-                                    src={selectedDocFile.url}
-                                    alt={selectedDocFile.filename}
-                                    style={{
-                                        maxWidth: '100%',
-                                        maxHeight: '80vh',
-                                        objectFit: 'contain'
-                                    }}
-                                    onError={(e) => {
-                                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'300\'%3E%3Crect width=\'400\' height=\'300\' fill=\'%23333\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23fff\'%3EImage failed to load%3C/text%3E%3C/svg%3E';
-                                    }}
-                                />
-                            )}
-                            {selectedDocFile?.type === 'video' && (
-                                <video
-                                    controls
-                                    autoPlay
-                                    style={{
-                                        maxWidth: '100%',
-                                        maxHeight: '80vh'
-                                    }}
-                                    onError={() => {
-                                        setShowDocumentationModal(false);
-                                        showAlertMessage('error', 'Error', 'Failed to load video file');
-                                    }}
-                                >
-                                    <source src={selectedDocFile.url} />
-                                    Your browser does not support the video tag.
-                                </video>
-                            )}
-                            {selectedDocFile?.type === 'other' && (
-                                <div style={{
-                                    textAlign: 'center',
-                                    color: 'white',
-                                    padding: '60px 40px'
-                                }}>
-                                    <FeatherIcon icon="file" size={64} style={{ marginBottom: '20px', opacity: 0.5 }} />
-                                    <p style={{ marginBottom: '20px', fontSize: '14px' }}>This file type cannot be previewed</p>
-                                    <a
-                                        href={selectedDocFile.url}
-                                        download
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '8px',
-                                            padding: '10px 24px',
-                                            background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
-                                            color: 'white',
-                                            textDecoration: 'none',
-                                            borderRadius: '12px',
-                                            fontSize: '14px',
-                                            fontWeight: '500'
-                                        }}
-                                    >
-                                        <FeatherIcon icon="download" size={16} />
-                                        Download File
-                                    </a>
-                                </div>
-                            )}
-                        </Modal.Body>
-                    </div>
-                </Modal>
-            </>
-        );
-    };
-
+            </Modal>
+        </>
+    );
+};
 
     useEffect(() => {
         if (data.criticality_analysis_status === 'Good/Ok') {
