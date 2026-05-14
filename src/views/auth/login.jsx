@@ -1,3 +1,5 @@
+
+
 import axios from 'axios';
 import config from 'config';
 import { useState, useRef, useEffect } from 'react';
@@ -209,6 +211,10 @@ export default function SignIn1() {
       e.preventDefault();
       setIsLoading(true);
 
+      console.log('Username:', username);
+      console.log('Password:', password);
+
+      // Validation
       if (!username.trim()) {
         showAlertMessage('warning', 'Missing Information', 'Please enter username');
         setIsLoading(false);
@@ -221,31 +227,49 @@ export default function SignIn1() {
       }
 
       try {
-        const res = await axios.get(`${config.baseApi}/authentication/login`, {
-          params: { user_name: username, pass_word: password }
-        });
+        // Query Supabase for user with matching username and password
+        const { data, error } = await supabase
+          .from('users_master')
+          .select('*')
+          .eq('user_name', username)
+          .eq('pass_word', password);
 
-        if (!res.data.error) {
-          localStorage.setItem('user', JSON.stringify(res.data));
+        // Check for errors
+        if (error) {
+          console.error('Supabase error:', error);
+          showAlertMessage('error', 'Login Error', 'Database error occurred');
+          setIsLoading(false);
+          return false;
+        }
+
+        // Check if user exists in the table
+        if (data && data.length > 0) {
+          // User found - proceed with login
+          const user = data[0]; // Get the first matching user
+
+          localStorage.setItem('user', JSON.stringify(user));
           localStorage.setItem('status', JSON.stringify([{ id: 0, value: 'Login' }]));
-          window.location.replace(`AssetReliabilityMonitoringSystem/dashboard`);
-        }
-      } catch (err) {
-        if (err.response) {
-          if (err.response.status === 401) {
-            showAlertMessage('warning', 'Login Error', 'Incorrect Password');
-          } else if (err.response.status === 404) {
-            showAlertMessage('warning', 'Login Error', 'Invalid username or password. Please try again.');
-          } else {
-            showAlertMessage('warning', 'Login Error', 'Invalid username or password. Please try again.');
-          }
+
+          showAlertMessage('success', 'Login Successful', `Welcome ${user.user_name || username}`);
+
+          // Redirect after short delay to show success message
+          setTimeout(() => {
+            window.location.replace(`/dashboard`);
+          }, 1000);
         } else {
-          showAlertMessage('warning', 'Connection Error', 'Unable to connect to server. Please check your internet or try again later.');
+          // No user found with these credentials
+          showAlertMessage('warning', 'Login Error', 'Invalid username or password. Please try again.');
+          setIsLoading(false);
         }
-        setTimeout(() => setIsLoading(false), 1000);
+
+      } catch (err) {
+        console.error('Login error:', err);
+        showAlertMessage('error', 'Connection Error', 'Unable to connect to server. Please check your internet or try again later.');
+        setIsLoading(false);
       }
     } catch (err) {
       console.log('Something went wrong!', err);
+      setIsLoading(false);
     }
   };
 
