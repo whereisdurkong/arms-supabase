@@ -3,7 +3,7 @@
 import axios from 'axios';
 import config from 'config';
 import { useState, useRef, useEffect } from 'react';
-
+import { supabase } from '../../createClient';
 // react-bootstrap
 import { Card, Row, Col, Button, Form } from 'react-bootstrap';
 
