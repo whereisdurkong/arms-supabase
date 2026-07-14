@@ -6,7 +6,7 @@ import router from 'routes';
 export default function App() {
   useEffect(() => {
     const heartbeat = async () => {
-      await supabase.from('users').select('id').limit(1);
+      await supabase.from('users_master').select('id_master').limit(1);
     };
 
     heartbeat();
